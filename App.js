@@ -15,9 +15,23 @@ import { theme } from "./colors";
 export default function App() {
   const [working, setWorking] = useState(true);
   const [text, setText] = useState("");
+  const [toDos, setToDos] = useState({});
   const travel = () => setWorking(false);
   const work = () => setWorking(true);
   const onChangeText = (payload) => setText(payload);
+  const addToDo = () => {
+    // alert("test");
+    if (text === "") {
+      return;
+    }
+    // Object.assign은 object 를 가져다가 다른 object와 합쳐준다. 그런다음 새로운 object를 리턴해준다.
+    const newToDos = Object.assign({}, toDos, {
+      [Date.now()]: { text, work: working },
+    });
+    setToDos(newToDos);
+    setText("");
+  };
+  console.log(toDos);
   return (
     <View style={styles.container}>
       <Text>Open up App.js to start working on your app!</Text>
@@ -61,8 +75,8 @@ export default function App() {
         // secureTextEntry
         // multiline
         // placeholderTextColor="red"
+        onSubmitEditing={addToDo}
         onChangeText={onChangeText}
-        autoCorrect
         autoCapitalize={"sentences"}
         placeholder={working ? "Add a To Do" : "Where do you want to go?"}
         style={styles.input}
