@@ -9,6 +9,7 @@ import {
   TouchableWithoutFeedback,
   Pressable,
   TextInput,
+  ScrollView,
 } from "react-native";
 import { theme } from "./colors";
 
@@ -24,10 +25,13 @@ export default function App() {
     if (text === "") {
       return;
     }
+    // toDos 추가하는 방법 1.
     // Object.assign은 object 를 가져다가 다른 object와 합쳐준다. 그런다음 새로운 object를 리턴해준다.
-    const newToDos = Object.assign({}, toDos, {
-      [Date.now()]: { text, work: working },
-    });
+    // const newToDos = Object.assign({}, toDos, {
+    //   [Date.now()]: { text, work: working },
+    // });
+    //  toDos 추가하는 방법 2. es6문법인 스프레드 연산을 사용.
+    const newToDos = { ...toDos, [Date.now()]: { text, work: working } };
     setToDos(newToDos);
     setText("");
   };
@@ -82,6 +86,13 @@ export default function App() {
         style={styles.input}
         value={text}
       />
+      <ScrollView>
+        {Object.keys(toDos).map((key) => (
+          <View style={styles.toDo} key={key}>
+            <Text style={styles.toDoText}>{toDos[key].text}</Text>
+          </View>
+        ))}
+      </ScrollView>
     </View>
   );
 }
@@ -106,7 +117,19 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
     paddingHorizontal: 20,
     borderRadius: 30,
-    marginTop: 20,
+    marginVertical: 20,
     fontSize: 18,
+  },
+  toDo: {
+    backgroundColor: theme.toDoBg,
+    marginBottom: 10,
+    paddingVertical: 20,
+    paddingHorizontal: 40,
+    borderRadius: 15,
+  },
+  toDoText: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "500",
   },
 });
