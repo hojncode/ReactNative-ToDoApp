@@ -1,5 +1,5 @@
 import { StatusBar } from "expo-status-bar";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   StyleSheet,
   Text,
@@ -12,6 +12,9 @@ import {
   ScrollView,
 } from "react-native";
 import { theme } from "./colors";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
+const STORAGE_KEY = "@toDos";
 
 export default function App() {
   const [working, setWorking] = useState(true);
@@ -20,22 +23,60 @@ export default function App() {
   const travel = () => setWorking(false);
   const work = () => setWorking(true);
   const onChangeText = (payload) => setText(payload);
-  const addToDo = () => {
+
+  // Storing string value === 스트링 값으로 저장하기.
+  // const saveToDos = async (toSave) => {
+  //   await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
+  // };
+
+  // const loadToDos = async () => {
+  //   const jsonValue = await AsyncStorage.getItem(STORAGE_KEY);
+  //   setToDos(JSON.parse(jsonValue));
+  //   console.log("콘솔", jsonValue, "콘솔2", JSON.parse(jsonValue)); //parse 를 사용해서 자바스크립트 오브젝트로 만들어준다.
+  // };
+
+  // Storing object value === 오브젝트로 저장하기. try catch 문 사용 : 실제 앱을 만들 경우 사용할 것.
+  const saveToDos = async (toSave) => {
+    try {
+      const jsonValue = JSON.stringify(toSave);
+      await AsyncStorage.setItem(STORAGE_KEY, jsonValue);
+    } catch (e) {
+      //saving error
+    }
+  };
+
+  const loadToDos = async () => {
+    try {
+      const jsonValue = await AsyncStorage.getItem(STORAGE_KEY);
+      return jsonValue != null ? setToDos(JSON.parse(jsonValue)) : null;
+      // console.log("콘솔", jsonValue, "콘솔2", JSON.parse(jsonValue)); //parse 를 사용해서 자바스크립트 오브젝트로 만들어준다.
+    } catch (e) {
+      //saving error
+    }
+  };
+
+  useEffect(() => {
+    loadToDos();
+  }, []);
+
+  const addToDo = async () => {
     // alert("test");
     if (text === "") {
       return;
     }
-    // toDos 추가하는 방법 1.
+    // toDos 추가하는 방법 1. Object.assign 사용.
     // Object.assign은 object 를 가져다가 다른 object와 합쳐준다. 그런다음 새로운 object를 리턴해준다.
     // const newToDos = Object.assign({}, toDos, {
     //   [Date.now()]: { text, work: working },
     // });
     //  toDos 추가하는 방법 2. es6문법인 스프레드 연산을 사용.
-    const newToDos = { ...toDos, [Date.now()]: { text, work: working } };
+    const newToDos = { ...toDos, [Date.now()]: { text, working } };
     setToDos(newToDos);
+    await saveToDos(newToDos);
     setText("");
   };
   console.log(toDos);
+
   return (
     <View style={styles.container}>
       <Text>Open up App.js to start working on your app!</Text>
@@ -44,7 +85,10 @@ export default function App() {
         {/* // TouchableOpacity 이걸 누르면 애니매이션이 들어간다. */}
         <TouchableOpacity activeOpacity={0.5} onPress={work}>
           <Text
-            style={{ ...styles.btnText, color: working ? "white" : theme.grey }}
+            style={{
+              ...styles.btnText,
+              color: working ? "white" : theme.grey,
+            }}
           >
             Work
           </Text>
@@ -87,11 +131,13 @@ export default function App() {
         value={text}
       />
       <ScrollView>
-        {Object.keys(toDos).map((key) => (
-          <View style={styles.toDo} key={key}>
-            <Text style={styles.toDoText}>{toDos[key].text}</Text>
-          </View>
-        ))}
+        {Object.keys(toDos).map((key) =>
+          toDos[key].working === working ? (
+            <View style={styles.toDo} key={key}>
+              <Text style={styles.toDoText}>{toDos[key].text}</Text>
+            </View>
+          ) : null
+        )}
       </ScrollView>
     </View>
   );
