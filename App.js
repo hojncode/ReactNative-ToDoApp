@@ -10,9 +10,12 @@ import {
   Pressable,
   TextInput,
   ScrollView,
+  Alert,
+  ActivityIndicator,
 } from "react-native";
 import { theme } from "./colors";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Fontisto } from "@expo/vector-icons";
 
 const STORAGE_KEY = "@toDos";
 
@@ -56,7 +59,7 @@ export default function App() {
   };
 
   useEffect(() => {
-    loadToDos();
+    setTimeout(() => loadToDos(console.log("loading time : 2sec")), 2000);
   }, []);
 
   const addToDo = async () => {
@@ -77,9 +80,25 @@ export default function App() {
   };
   console.log(toDos);
 
+  const deleteToDo = (key) => {
+    Alert.alert("Delete To DO?", "Are you sure?", [
+      { text: "Cancel" },
+      {
+        text: "I'm Sure",
+        style: "destructive", // 설정시 해당 버튼 텍스트가 빨간색으로 보임(ios만 적용)
+        onPress: async () => {
+          const newToDos = { ...toDos }; // 삭제하기 위한 순서 1. 현재 저장되어 있는 toDos 를 모두 가져오고,
+          delete newToDos[key]; // 2. deleteToDo() 함수에 파라미터로 key 값이 들어오는것과 일치하는 newToDos 항목을 삭제해준다. -> delete 연산자 사용.!!
+          setToDos(newToDos); // 3.setToDos로 변경된 newToDos를 보내서 state를 갱신해준다.
+          await saveToDos(newToDos); // 4. saveToDos() 함수를 사용해서 로컬스토리지에 저장해준다.
+        },
+      },
+    ]);
+    return;
+  };
+
   return (
     <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
       <StatusBar style="auto" />
       <View style={styles.header}>
         {/* // TouchableOpacity 이걸 누르면 애니매이션이 들어간다. */}
@@ -130,15 +149,29 @@ export default function App() {
         style={styles.input}
         value={text}
       />
-      <ScrollView>
-        {Object.keys(toDos).map((key) =>
-          toDos[key].working === working ? (
-            <View style={styles.toDo} key={key}>
-              <Text style={styles.toDoText}>{toDos[key].text}</Text>
-            </View>
-          ) : null
-        )}
-      </ScrollView>
+      {toDos.length === 0 ? (
+        <View style={{ ...styles.container }}>
+          <ActivityIndicator
+            color="white"
+            style={{ marginTop: 500 }}
+            size="large"
+          />
+          <Text>aaaaaaa</Text>
+        </View>
+      ) : (
+        <ScrollView>
+          {Object.keys(toDos).map((key) =>
+            toDos[key].working === working ? (
+              <View style={styles.toDo} key={key}>
+                <Text style={styles.toDoText}>{toDos[key].text}</Text>
+                <TouchableOpacity onPress={() => deleteToDo(key)}>
+                  <Fontisto name="trash" size={18} color={theme.grey} />
+                </TouchableOpacity>
+              </View>
+            ) : null
+          )}
+        </ScrollView>
+      )}
     </View>
   );
 }
@@ -162,7 +195,7 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
     paddingVertical: 15,
     paddingHorizontal: 20,
-    borderRadius: 30,
+    borderRadius: 5,
     marginVertical: 20,
     fontSize: 18,
   },
@@ -171,7 +204,10 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     paddingVertical: 20,
     paddingHorizontal: 40,
-    borderRadius: 15,
+    borderRadius: 5,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
   toDoText: {
     color: "white",
